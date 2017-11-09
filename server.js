@@ -1,7 +1,10 @@
-const express = require("express");
-const adl = require("adl-xapiwrapper");
-const bodyParser = require("body-parser");
+const fs = require("fs");
 
+const express = require("express");
+const bodyParser = require("body-parser");
+const adl = require("adl-xapiwrapper");
+
+const randomStatementGenerator = require("./services/statement");
 
 // Initializes the API wrapper
 // parameters used from LRS host
@@ -18,36 +21,24 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
-app.post("/", function (req, res) {
-  const statement = {
-    "actor": {
-      mbox: `mailto:${req.body.email}`,
-      name: `${req.body.username}`,
-    },
-    "verb": {
-      id: `${req.body.verbUri}`,
-      display: {
-        "en-US": `${req.body.verb}`
-      },
-    },
-    object: {
-      id: `${req.body.activityUri}`,
-      definition: {
-        name: {
-          "en-US": `${req.body.activity}`
-        }
-      }
-    }
-  };
-  let msg;
-  lrs.sendStatements(statement, function (err, resp, body) {
-    adl.log("info", resp.statusCode);
-    adl.log("info", body);
-    console.log(body);
-    res.status = resp.statusCode;
-    msg = JSON.stringify(body);
-  });
-  res.send(msg);
+const verbs = JSON.parse(fs.readFileSync("./assets/verbs.json", "utf-8"));
+const activities = JSON.parse(fs.readFileSync("./assets/activities.json", "utf-8"));
+
+const randStatement = new randomStatementGenerator(
+  ["Morty", "Beth", "Summer", "Jerry"],
+  verbs,
+  activities
+);
+
+app.get("/", function (req, res) {
+  randStatement.randomize();
+  lrs.sendStatements(randStatement.createStatement(),
+    function (err, resp, body) {
+      adl.log("info", resp.statusCode);
+      adl.log("info", body);
+      res.send("Finished!");
+    });
+  res.status = 200;
 });
 
 app.listen(3000, function () {
