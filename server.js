@@ -14,7 +14,9 @@ const lrs = new adl.XAPIWrapper({
 });
 
 const app = express();
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 
 app.post("/", function (req, res) {
   const statement = {
@@ -22,19 +24,23 @@ app.post("/", function (req, res) {
       mbox: `mailto:${req.body.email}`,
       name: `${req.body.username}`,
     },
-    "verb":  {
+    "verb": {
       id: `${req.body.verbUri}`,
-      display: {"en-US": `${req.body.verb}`},
+      display: {
+        "en-US": `${req.body.verb}`
+      },
     },
     object: {
       id: `${req.body.activityUri}`,
       definition: {
-        name: {"en-US": "The Good Student Badge"}
+        name: {
+          "en-US": `${req.body.activity}`
+        }
       }
     }
   };
   let msg;
-  lrs.sendStatements(statement, function(err, resp, body) {
+  lrs.sendStatements(statement, function (err, resp, body) {
     adl.log("info", resp.statusCode);
     adl.log("info", body);
     console.log(body);
