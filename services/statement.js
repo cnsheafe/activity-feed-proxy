@@ -59,11 +59,11 @@ class RandomStatementGenerator {
 
   createStatement() {
     return {
-      "actor": {
+      actor: {
         mbox: `mailto:${this._email}`,
         name: this._username,
       },
-      "verb": {
+      verb: {
         id: this._verbUri,
         display: this._verb
       },
