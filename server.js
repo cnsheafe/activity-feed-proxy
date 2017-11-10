@@ -32,36 +32,72 @@ const randStatement = new randomStatementGenerator(
 
 app.get("/", function (req, res) {
   randStatement.randomize();
-  lrs.sendStatements(randStatement.createStatement(),
-    function (err, resp, body) {
-      adl.log("info", resp.statusCode);
-      adl.log("info", body);
-      console.log(body);
-
-      res.status = 200;
-      res.send("Finished!");
-    });
+  return new Promise(function (resolve, reject) {
+    lrs.sendStatements(randStatement.createStatement(),
+      function (err, resp, body) {
+        if (err) {
+          reject(err);
+        }
+        else {
+          adl.log("info", resp.statusCode);
+          adl.log("info", body);
+          res.status = 200;
+          res.send("Finished!");
+          resolve();
+        }
+      });
+  });
 });
 
 app.get("/feed", function (req, res) {
-  lrs.getStatements(null, null, function(err, resp, body) {
+  lrs.getStatements(null, null, function (err, resp, body) {
     adl.log("info", resp.statusCode);
     adl.log("info", body);
     if (JSON.parse(body).more) {
-      lrs.getStatements(null, null, function(err, resp, body) {
+      lrs.getStatements(null, null, function (err, resp, body) {
         console.log("More to come!");
         res.status = resp.statusCode;
         res.send(body);
       });
-    }
-    else {
+    } else {
       console.log("That's it!");
-      res.status = resp.statusCode;
+      res.status(resp.statusCode);
       res.send(body);
     }
   });
 });
 
-app.listen(3000, function () {
-  console.log("Server started up!");
-});
+let server;
+function openServer() {
+  return new Promise(function (resolve, reject) {
+    server = app.listen(process.env.PORT || 3000, function () {
+      console.log("Creating server!");
+      resolve(server);
+    }).on("error", err => {
+      reject(err);
+    });
+  });
+}
+
+function closeServer() {
+  return new Promise(function (resolve, reject) {
+    console.log("Closing server!");
+    server.close(err => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
+if (require.main === module) {
+  openServer().catch(err => console.error(err));
+}
+
+module.exports = {
+  openServer,
+  closeServer,
+  app
+};
