@@ -36,9 +36,30 @@ app.get("/", function (req, res) {
     function (err, resp, body) {
       adl.log("info", resp.statusCode);
       adl.log("info", body);
+      console.log(body);
+
+      res.status = 200;
       res.send("Finished!");
     });
-  res.status = 200;
+});
+
+app.get("/feed", function (req, res) {
+  lrs.getStatements(null, null, function(err, resp, body) {
+    adl.log("info", resp.statusCode);
+    adl.log("info", body);
+    if (JSON.parse(body).more) {
+      lrs.getStatements(null, null, function(err, resp, body) {
+        console.log("More to come!");
+        res.status = resp.statusCode;
+        res.send(body);
+      });
+    }
+    else {
+      console.log("That's it!");
+      res.status = resp.statusCode;
+      res.send(body);
+    }
+  });
 });
 
 app.listen(3000, function () {
