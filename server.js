@@ -70,7 +70,7 @@ app.get("/feed", function (req, res) {
 let server;
 function openServer() {
   return new Promise(function (resolve, reject) {
-    server = app.listen(process.env.PORT || 3000, function () {
+    server = app.listen(process.env.$PORT || 3000, function () {
       console.log("Creating server!");
       resolve(server);
     }).on("error", err => {
