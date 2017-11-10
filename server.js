@@ -68,9 +68,10 @@ app.get("/feed", function (req, res) {
 });
 
 let server;
+const PORT = +process.argv[2] || 3000;
 function openServer() {
   return new Promise(function (resolve, reject) {
-    server = app.listen(process.env.$PORT || 3000, function () {
+    server = app.listen(PORT, function () {
       console.log("Creating server!");
       resolve(server);
     }).on("error", err => {
