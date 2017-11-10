@@ -5,16 +5,21 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "parse-json": "node utility/parse-assets.js",
+    "test": "mocha"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "adl-xapiwrapper": "^0.2.1",
     "body-parser": "^1.18.2",
-    "express": "^4.16.2"
+    "express": "^4.16.2",
+    "uuid": "^3.1.0"
   },
   "devDependencies": {
-    "eslint": "^4.10.0"
+    "chai": "3.5.0",
+    "chai-http": "^3.0.0",
+    "eslint": "^4.10.0",
+    "mocha": "3.1.2"
   }
 }

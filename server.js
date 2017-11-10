@@ -1,7 +1,10 @@
-const express = require("express");
-const adl = require("adl-xapiwrapper");
-const bodyParser = require("body-parser");
+const fs = require("fs");
 
+const express = require("express");
+const bodyParser = require("body-parser");
+const adl = require("adl-xapiwrapper");
+
+const randomStatementGenerator = require("./services/statement");
 
 // Initializes the API wrapper
 // parameters used from LRS host
@@ -18,38 +21,83 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
-app.post("/", function (req, res) {
-  const statement = {
-    "actor": {
-      mbox: `mailto:${req.body.email}`,
-      name: `${req.body.username}`,
-    },
-    "verb": {
-      id: `${req.body.verbUri}`,
-      display: {
-        "en-US": `${req.body.verb}`
-      },
-    },
-    object: {
-      id: `${req.body.activityUri}`,
-      definition: {
-        name: {
-          "en-US": `${req.body.activity}`
+const verbs = JSON.parse(fs.readFileSync("./assets/verbs.json", "utf-8"));
+const activities = JSON.parse(fs.readFileSync("./assets/activities.json", "utf-8"));
+
+const randStatement = new randomStatementGenerator(
+  ["Morty", "Beth", "Summer", "Jerry"],
+  verbs,
+  activities
+);
+
+app.get("/", function (req, res) {
+  randStatement.randomize();
+  return new Promise(function (resolve, reject) {
+    lrs.sendStatements(randStatement.createStatement(),
+      function (err, resp, body) {
+        if (err) {
+          reject(err);
         }
-      }
-    }
-  };
-  let msg;
-  lrs.sendStatements(statement, function (err, resp, body) {
-    adl.log("info", resp.statusCode);
-    adl.log("info", body);
-    console.log(body);
-    res.status = resp.statusCode;
-    msg = JSON.stringify(body);
+        else {
+          adl.log("info", resp.statusCode);
+          adl.log("info", body);
+          res.status = 200;
+          res.send("Finished!");
+          resolve();
+        }
+      });
   });
-  res.send(msg);
 });
 
-app.listen(3000, function () {
-  console.log("Server started up!");
+app.get("/feed", function (req, res) {
+  lrs.getStatements(null, null, function (err, resp, body) {
+    adl.log("info", resp.statusCode);
+    adl.log("info", body);
+    if (JSON.parse(body).more) {
+      lrs.getStatements(null, null, function (err, resp, body) {
+        console.log("More to come!");
+        res.status = resp.statusCode;
+        res.send(body);
+      });
+    } else {
+      console.log("That's it!");
+      res.status(resp.statusCode);
+      res.send(body);
+    }
+  });
 });
+
+let server;
+function openServer() {
+  return new Promise(function (resolve, reject) {
+    server = app.listen(process.env.PORT || 3000, function () {
+      console.log("Creating server!");
+      resolve(server);
+    }).on("error", err => {
+      reject(err);
+    });
+  });
+}
+
+function closeServer() {
+  return new Promise(function (resolve, reject) {
+    console.log("Closing server!");
+    server.close(err => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
+if (require.main === module) {
+  openServer().catch(err => console.error(err));
+}
+
+module.exports = {
+  openServer,
+  closeServer,
+  app
+};
