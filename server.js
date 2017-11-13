@@ -37,8 +37,7 @@ app.get("/", function (req, res) {
       function (err, resp, body) {
         if (err) {
           reject(err);
-        }
-        else {
+        } else {
           adl.log("info", resp.statusCode);
           adl.log("info", body);
           res.status = 200;
@@ -53,6 +52,9 @@ app.get("/feed", function (req, res) {
   lrs.getStatements(null, null, function (err, resp, body) {
     adl.log("info", resp.statusCode);
     adl.log("info", body);
+
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Content-Type", "application/json");
     if (JSON.parse(body).more) {
       lrs.getStatements(null, null, function (err, resp, body) {
         console.log("More to come!");
@@ -69,6 +71,7 @@ app.get("/feed", function (req, res) {
 
 let server;
 const PORT = +process.argv[2] || 3000;
+
 function openServer() {
   return new Promise(function (resolve, reject) {
     server = app.listen(PORT, function () {
