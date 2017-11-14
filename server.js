@@ -75,7 +75,7 @@ const PORT = +process.argv[2] || 3000;
 function openServer() {
   return new Promise(function (resolve, reject) {
     server = app.listen(PORT, function () {
-      console.log("Creating server!");
+      console.log(`Creating server on port: ${PORT}!`);
       resolve(server);
     }).on("error", err => {
       reject(err);
