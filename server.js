@@ -49,6 +49,8 @@ app.get("/", function(req, res) {
         adl.log("info", resp.statusCode);
         adl.log("info", body);
         res.status = 200;
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Content-Type", "application/json");
         res.send(body);
         resolve();
       }
